@@ -164,13 +164,16 @@ proc freq data = c_t;
 	by mode;
 run;
 
-/*Stop title*/
 title;
 footnote;
 
+proc sort data = c_t;
+	by personid;
+run;
+
 /*Question 2*/
 /*Create the new data structure with desired outputs by modes with corresponding attributes*/
-data H1_Q2(keep = PID modes GENDER HHSIZE NUMVEH NWORKERS NLICDRIV HHINC IVTT OVTT COST TRANSFER DISTANCE CHOICE);
+data H1_Q2(keep = PID modes GENDER HHSIZE NUMVEH NWORKERS NLICDRIV HHINC IVTT OVTT COST TRANSFER DISTANCE DECISION);
 	set c_t;
 	array IVT{2} ivtt_tr ivtt_c;
 	array OVT{2} ovtt_tr ovtt_c;
@@ -180,7 +183,7 @@ data H1_Q2(keep = PID modes GENDER HHSIZE NUMVEH NWORKERS NLICDRIV HHINC IVTT OV
 	do i = 1 to 2;
 		Modes = i-1;
 		PID = personid - 1;
-		CHOICE = (Mode = i-1);
+		DECISION = (Mode = i-1);
 		GENDER = Gender;
 		HHSIZE = HHSize;
 		NUMVEH = NumVeh;
@@ -190,8 +193,9 @@ data H1_Q2(keep = PID modes GENDER HHSIZE NUMVEH NWORKERS NLICDRIV HHINC IVTT OV
 		IVTT = IVT{i};
 		OVTT = OVT{i};
 		COST = CO{i};
-		if i = 1 then TRANSFER = Transfer;
-		else transfer = 0;
+/*		if i = 1 then transfer = transfer;
+		else transfer = 0;*/
+		transfer = transfer;
 		DISTANCE = Distance;
 		output;
 	end;
@@ -199,7 +203,7 @@ run;
 
 /*Format & order the adjusted data structure for further analysis*/
 data h1_q2;
-	retain PID Modes Gender HHSize NumVeh NWorkers NLicDriv HHInc IVTT OVTT Cost Transfer Distance Choice;
+	retain PID Modes Gender HHSize NumVeh NWorkers NLicDriv HHInc IVTT OVTT Cost Transfer Distance Decision;
 	set h1_q2;
 run;
 
@@ -211,7 +215,7 @@ run;
 /*Question 3_a*/
 /*Constant-only model, Logit(C)*/
 proc mdc data = h1_q2;
-	model choice = modes /
+	model decision = modes /
 			type = clogit
 			choice = (modes 0 1)
 			covest = hess
@@ -222,7 +226,7 @@ run;
 /*Question 3_b*/
 /*IVTT, OVTT and Cost as generic explanatory variables*/
 proc mdc data = h1_q2;
-	model choice = modes ivtt ovtt cost /
+	model decision = modes ivtt ovtt cost /
 			type = clogit
 			choice = (modes 0 1)
 			covest = hess
@@ -239,7 +243,73 @@ data h1_q3c;
 run;
 
 proc mdc data = h1_q3c;
-	model choice = modes ivtt ovttdist cost /
+	model decision = modes ivtt ovttdist cost /
+			type = clogit
+			choice = (modes 0 1)
+			covest = hess
+			optmethod = qn;
+	id pid;
+run;
+
+/*Question 3_d*/
+/*Create a new variable Total Travel Time with TOTIME = IVTT + OVTT*/
+/*TOTIME and Cost as generic explanatory variables*/
+data h1_q3d;
+	set h1_q3c; 
+	TOTTIME = IVTT + OVTT;
+run;
+
+proc mdc data = h1_q3d;
+	model decision = modes ivtt ovttdist tottime cost /
+			type = clogit
+			choice = (modes 0 1)
+			covest = hess
+			optmethod = qn;
+	id pid;
+run;
+
+
+/*Question 3_e*/
+/*Create a new variable Transfers Indicator with TranID = Transfer if Mode = 0, else TranID = 0*/
+/*TranID, TOTTIME and Cost as generic explanatory variables*/
+data h1_q3e;
+	set h1_q3d;
+	if modes = 0 then tranid = transfer;
+	else tranid = 0;
+run;
+
+proc mdc data = h1_q3e;
+	model decision = modes ivtt ovttdist tottime cost tranid /
+			type = clogit
+			choice = (modes 0 1)
+			covest = hess
+			optmethod = qn;
+	id pid;
+run;
+
+/*Question 3_f*/
+data h1_q3f;
+	set h1_q3e;
+	if modes = 1 then hhinc_c = hhinc;
+	else hhinc_c = 0; 
+	if modes = 1 then gender_c = gender;
+	else gender_c = 0;
+	if modes = 1 then numveh_c = numveh;
+	else numveh_c = 0;
+run;
+
+proc mdc data = h1_q3f;
+	model decision = modes ivtt ovttdist tottime cost hhinc_c gender_c numveh_c tranid /
+			type = clogit
+			choice = (modes 0 1)
+			covest = hess
+			optmethod = qn;
+	id pid;
+run;
+
+/*Question 3_g*/
+proc mdc data = h1_q3f;
+	model decision = modes ovttdist tottime cost numveh_c /
 			type = clogit
 			choice = (modes 0 1)
 			covest = hess

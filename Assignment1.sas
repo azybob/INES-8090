@@ -190,7 +190,8 @@ data H1_Q2(keep = PID modes GENDER HHSIZE NUMVEH NWORKERS NLICDRIV HHINC IVTT OV
 		IVTT = IVT{i};
 		OVTT = OVT{i};
 		COST = CO{i};
-		TRANSFER = Transfer;
+		if i = 1 then TRANSFER = Transfer;
+		else transfer = 0;
 		DISTANCE = Distance;
 		output;
 	end;

@@ -88,7 +88,7 @@ proc freq data = c_t;
 	table nlicdriv*mode;
 run;
 
-/*Create a new variable  with NVehPerLic = NumVeh/NLicDriv*/
+/*Create a new variable no. of vehicles per licensed driver in household with NVehPerLic = NumVeh/NLicDriv*/
 /*Cross table the mode with no. of vehicles per licensed driver in household*/
 data c_t;
 	set c_t;
@@ -179,12 +179,43 @@ data h1_q2;
 	set h1_q2;
 run;
 
-/*Question 3*/
+/*Print the first 3 persons' information*/
 proc print data= h1_q2(obs= 6);
 run;
 
+/*Question 3*/
+/*Question 3_a*/
+/*Constant-only model, Logit(C)*/
 proc mdc data = h1_q2;
 	model choice = modes /
+			type = clogit
+			choice = (modes 0 1)
+			covest = hess
+			optmethod = qn;
+	id pid;
+run;
+
+/*Question 3_b*/
+/*IVTT, OVTT and Cost as generic explanatory variables*/
+proc mdc data = h1_q2;
+	model choice = modes ivtt ovtt cost /
+			type = clogit
+			choice = (modes 0 1)
+			covest = hess
+			optmethod = qn;
+	id pid;
+run;
+
+/*Question 3_c*/
+/*Create a new variable OVTT by Distance with OVTTDist = OVTT / Distance*/
+/*IVTT, OVTTDist and Cost as generic explanatory variables*/
+data h1_q3c;
+	set h1_q2; 
+	OVTTDist = OVTT / Distance;
+run;
+
+proc mdc data = h1_q3c;
+	model choice = modes ivtt ovttdist cost /
 			type = clogit
 			choice = (modes 0 1)
 			covest = hess

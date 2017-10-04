@@ -1,4 +1,5 @@
 /*Import external data - excel file*/
+/*proc import datafile = 'W:\Documents\HW Assignments\INES 8090\Assignment1.xlsx' dbms = xlsx out = c_t;*/
 proc import datafile = '/home/yl700/Data/Assignment1.xlsx' dbms = xlsx out = c_t;
 run;
 

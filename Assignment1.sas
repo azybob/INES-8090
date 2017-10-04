@@ -145,7 +145,7 @@ proc sort data = c_t;
 run;
 
 proc freq data = c_t;
-	title 'Cross-tabulate of IVTT_C with Cost_C by Mode'
+	title 'Cross-tabulate of IVTT_C with Cost_C by Mode';
 	format ivtt_c ivtt_cs. cost_c cost_cs.;
 	tables ivtt_c * cost_c/*/ chisq measures cmh*/;
 	by mode;
@@ -157,11 +157,15 @@ proc sort data = c_t;
 run;
 
 proc freq data = c_t;
-	title 'Cross-tabulate of IVTT_Tr with Cost_Tr by Mode'
+	title 'Cross-tabulate of IVTT_Tr with Cost_Tr by Mode';
 	format ivtt_tr ivtt_ts. cost_tr cost_ts.;
 	tables ivtt_tr * cost_tr/*/ chisq measures cmh*/;
 	by mode;
 run;
+
+/*Stop title*/
+title;
+footnote;
 
 /*Question 2*/
 /*Create the new data structure with desired outputs by modes with corresponding attributes*/

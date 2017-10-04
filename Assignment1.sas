@@ -11,11 +11,11 @@ proc format;
 	value ivtt_cs low-15 = 'Very Low' 15-30 = 'Low' 30-45 = 'Normal' 45-60 = 'High' 60-high = 'Very High';
 	value ivtt_ts low-15 = 'Very Low' 15-30 = 'Low' 30-45 = 'Normal' 45-60 = 'High' 60-high = 'Very High';
 	value cost_cs low-1 = 'Very Low' 1-2 = 'Low' 2-3 = 'Normal' 3-4 = 'High' 4-high = 'Very High';
+	value cost_ts low-1 = 'Very Low' 1-2 = 'Low' 2-3 = 'Normal' 3-4 = 'High' 4-high = 'Very High';
 	value modess 0 = 1 1 = 2;
 run;
 
-/*Question 1*/
-
+/*Question 1_a & b*/
 /*Creat frequency tables of mode gender numveh nworkers nlicdriv*/
 proc freq data = c_t;
 	title 'Frequency Data';
@@ -51,6 +51,7 @@ proc sgplot data = c_t;
 	title 'Frequency Distribution of Total Number of Licensed Drivers in The Household';
 run;
 
+/*Question 1_c*/
 /*Plot the 'Frequency Distribution of Household Income'*/
 /*Use format to group the income into different level to show the result*/
 proc sgplot data = c_t;
@@ -59,6 +60,7 @@ proc sgplot data = c_t;
 	title 'Frequency Distribution of Household Income';
 run;
 
+/*Question 1_d*/
 /*Plot the 'Frequency Distribution of Transfer Indicator'*/
 proc sgplot data = c_t;
 	title 'Frequency Distribution of Transfer Indicator';
@@ -66,7 +68,8 @@ proc sgplot data = c_t;
 	vbar transfer;
 run;
 
-/*Question 1*/
+/*Question 1_e*/
+/*Question 1_e_a*/
 /*Cross table the mode with gender*/
 proc freq data = c_t;
 	title 'Cross-tabulate of Mode-Gender';
@@ -88,6 +91,7 @@ proc freq data = c_t;
 	table nlicdriv*mode;
 run;
 
+/*Question 1_e_b*/
 /*Create a new variable no. of vehicles per licensed driver in household with NVehPerLic = NumVeh/NLicDriv*/
 /*Cross table the mode with no. of vehicles per licensed driver in household*/
 data c_t;
@@ -101,6 +105,7 @@ proc freq data = c_t;
 	table nvehperlic*mode;
 run;
 
+/*Question 1_e_c*/
 /*Cross table the mode with transfer no.*/
 proc freq data = c_t;
 	title 'Cross-tabulate of Mode-Transfer Indicator';
@@ -134,14 +139,27 @@ data c_t2;
 	format mode modess.;
 run;*/
 
-/**/
+/*Question 1_e_d_DA*/
 proc sort data = c_t;
 	by mode;
 run;
 
 proc freq data = c_t;
+	title 'Cross-tabulate of IVTT_C with Cost_C by Mode'
 	format ivtt_c ivtt_cs. cost_c cost_cs.;
 	tables ivtt_c * cost_c/*/ chisq measures cmh*/;
+	by mode;
+run;
+
+/*Question 1_e_d_Tr*/
+proc sort data = c_t;
+	by mode;
+run;
+
+proc freq data = c_t;
+	title 'Cross-tabulate of IVTT_Tr with Cost_Tr by Mode'
+	format ivtt_tr ivtt_ts. cost_tr cost_ts.;
+	tables ivtt_tr * cost_tr/*/ chisq measures cmh*/;
 	by mode;
 run;
 

@@ -173,37 +173,27 @@ run;
 
 /*Question 2*/
 /*Create the new data structure with desired outputs by modes with corresponding attributes*/
-data H1_Q2(keep = PID modes GENDER HHSIZE NUMVEH NWORKERS NLICDRIV HHINC IVTT OVTT COST TRANSFER DISTANCE DECISION);
+data H1_Q2(keep = personid modes GENDER HHSIZE NUMVEH NWORKERS NLICDRIV HHINC IVTT OVTT COST TRANSFER DISTANCE DECISION);
 	set c_t;
 	array IVT{2} ivtt_tr ivtt_c;
 	array OVT{2} ovtt_tr ovtt_c;
 	array CO{2} cost_tr cost_c;
-	retain personid 0;
-	personid +1;
+	retain personid 0 distance gender HHSIZE NUMVEH NWORKERS NLICDRIV HHINC transfer;
 	do i = 1 to 2;
 		Modes = i-1;
-		PID = personid - 1;
 		DECISION = (Mode = i-1);
-		GENDER = Gender;
-		HHSIZE = HHSize;
-		NUMVEH = NumVeh;
-		NWORKERS = NWorkers;
-		NLICDRIV = NLicDriv;
-		HHINC = HHInc;
 		IVTT = IVT{i};
 		OVTT = OVT{i};
 		COST = CO{i};
 /*		if i = 1 then transfer = transfer;
 		else transfer = 0;*/
-		transfer = transfer;
-		DISTANCE = Distance;
 		output;
 	end;
 run;
 
 /*Format & order the adjusted data structure for further analysis*/
 data h1_q2;
-	retain PID Modes Gender HHSize NumVeh NWorkers NLicDriv HHInc IVTT OVTT Cost Transfer Distance Decision;
+	retain personid Modes Gender HHSize NumVeh NWorkers NLicDriv HHInc IVTT OVTT Cost Transfer Distance Decision;
 	set h1_q2;
 run;
 

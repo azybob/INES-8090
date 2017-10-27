@@ -1,9 +1,9 @@
 /*Import file under Mosaic Computer environment*/
-/*proc import out = work.a_2 datafile = 'W:\Documents\HW Assignments\INES 8090\Assignment1.xlsx' dbms = xlsx;*/
+proc import out = work.a_2 datafile = 'W:\Documents\HW Assignments\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;
 /*Import file under SAS Studio Environment*/
-/*proc import datafile = '/home/yl700/Data/Assignment1.xlsx' dbms = xlsx out = work.a_2;*/
+/*proc import datafile = '/home/yl700/Data/Assignment2.xlsx' dbms = xlsx out = work.a_2;*/
 /*Import file under Citrix Remote Access environment*/
-proc import out = work.a_2 datafile = '\\client\D$\Google Drive\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;
+/*proc import out = work.a_2 datafile = '\\client\D$\Google Drive\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;*/
 run;
 
 /*Create formats of the variables, in order to show the analysis results more readibly*/
@@ -20,6 +20,10 @@ run;
 		add m_s num label = 'Mode Share';
 	select alt, Sum, m_s from Mode_Share;
 */
+
+/*Question 1*/
+/*Question 1_a*/
+/*Create table of sample mode frequency*/
 proc sql;
 	create table s_s as
 	select alt,
@@ -28,18 +32,21 @@ proc sql;
 		group by alt
 		order by alt;
 
+/*Create table of sample mode share*/
 proc sql;
 	create table m_s as
 	select alt, Frequency, Frequency/sum(Frequency) as ss format = percentn10.2
 		from s_s;
 quit;
 
+/*Print sample mode share*/
 proc print data = m_s label;
 	label alt = 'Mode' ss = 'Mode Share';
 	format alt alts.;
 	title 'Mode Share from The Sample';
 run;
 
+/*Add one column corresponding to true market share*/
 data m_s2;
 	set m_s;
 	if alt = 1 then mks = 0.7655;
@@ -48,8 +55,34 @@ data m_s2;
 	format mks percentn10.2;
 run;
 
+/*Question 1_b*/
+/*Create table to calculate weight corresponding to market share*/
 proc sql;
 	create table wm_s2 as
 	select alt, frequency, ss, mks, mks/ss as weight format = 10.4
 		from m_s2;
 quit;
+
+/*Question 1_c*/
+/*Logit(C) without weight variable*/
+proc mdc data = a_2;
+	title 'The Constant-Only Logit Model (without weight)';
+	model chosen = alt /
+		type = clogit
+		choice = (alt)
+		covest = hess
+		optmethod = qn;
+	id case;
+run;
+
+/*Question 1_d*/
+/*Logit(C) with weight variable*/
+proc mdc data = a_2;
+	title 'The Constant-Only Logit Model (with weight)';
+	model chosen = alt /
+		type = clogit
+		choice = (alt)
+		covest = hess
+		optmethod = qn;
+	id case;
+run;

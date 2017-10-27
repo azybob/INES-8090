@@ -67,7 +67,7 @@ quit;
 /*Logit(C) without weight variable*/
 proc mdc data = a_2;
 	title 'The Constant-Only Logit Model (without weight)';
-	model chosen = alt /
+	model chosen = unoda unosr unotr /
 		type = clogit
 		choice = (alt)
 		covest = hess
@@ -77,12 +77,10 @@ run;
 
 /*Question 1_d*/
 /*Logit(C) with weight variable*/
-proc mdc data = a_2;
+proc logistic data = a_2;
 	title 'The Constant-Only Logit Model (with weight)';
 	model chosen = alt /
-		type = clogit
-		choice = (alt)
-		covest = hess
-		optmethod = qn;
-	id case;
+		link = logit;
+	weight weight;
+	output out=new P= option;
 run;

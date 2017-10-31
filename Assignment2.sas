@@ -64,23 +64,55 @@ proc sql;
 quit;
 
 /*Question 1_c*/
-/*Logit(C) without weight variable*/
+/*Logit(C) without weight variable
 proc mdc data = a_2;
 	title 'The Constant-Only Logit Model (without weight)';
-	model chosen = unoda unosr unotr /
+	model chosen = unosr unotr /
 		type = clogit
 		choice = (alt)
 		covest = hess
 		optmethod = qn;
 	id case;
-run;
+run;*/
 
 /*Question 1_d*/
-/*Logit(C) with weight variable*/
+/*Logit(C) with weight variable
 proc logistic data = a_2;
 	title 'The Constant-Only Logit Model (with weight)';
-	model chosen = alt /
-		link = logit;
+	model chosen (event = '1')= unoda unotr unosr / noint;
 	weight weight;
 	output out=new P= option;
 run;
+proc logistic data = a_2;
+	title 'The Constant-Only Logit Model (with weight)';
+	model chosen (event = '1') = unosr unotr / noint link = logit;
+	weight weight;
+	output out=new P= option;
+run;*/
+
+title;
+
+data a_2;
+set a_2;
+failure = 1-chosen;
+run;
+
+proc phreg data = a_2 nosummary outest = betas_0;
+strata case;
+model failure*chosen (0) = unosr unotr ;
+run;
+
+proc phreg data = a_2 nosummary outest = betas_1;
+strata case;
+model failure*chosen (0) = unosr unotr ;
+weight weight;
+run;
+
+proc score data = a_2
+	score = betas_0 type = parms out = p;
+	var &_trgind;
+run;
+
+data p2;
+set p;
+p = exp(p)

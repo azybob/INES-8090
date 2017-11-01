@@ -42,7 +42,7 @@ proc sql;
 quit;
 
 /*Print sample mode share*/
-proc print data = m_s label;
+proc print data = m_s label noobs;
 	label alt = 'Mode' ss = 'Mode Sample Share';
 	format alt alts.;
 	title 'Mode Share from The Sample';
@@ -68,7 +68,7 @@ proc sql;
 quit;
 
 /*Print sample mode share*/
-proc print data = wm_s2 label;
+proc print data = wm_s2 label noobs;
 	label alt = 'Mode' ss = 'Sample Share' mks = 'Market Share';
 	format alt alts.;
 	title 'Weight = Market Share / Sample Share';
@@ -114,7 +114,7 @@ run;
 
 /*Question 1_c*/
 /*Logit(C) without weight variable using 'phreg'*/
-proc phreg data = a_2 nosummary outest = betas_0;
+proc phreg data = a_2 nosummary outest = betas_0_ss;
 strata case;
 model failure*chosen (0) = unosr unotr ;
 title 'Constant-Only Logit Model without Weight';
@@ -122,7 +122,7 @@ run;
 
 /*The following stpes calculate the probabilities of each alternatives within each case*/
 /*1. using the betas_0 and the corresponding vars(unosr and unotr) to calculate the utilities*/
-proc score data = a_2 score = betas_0 type = parms out = p;
+proc score data = a_2 score = betas_0_ss type = parms out = p;
 	var unosr unotr;
 run;
 
@@ -166,7 +166,7 @@ format v_m_wo_w percent10.2;
 run;
 
 /*6. Create a table to show the verification*/
-proc print data = v_m_wo_w label;
+proc print data = v_m_wo_w label noobs;
 	label alt = 'Mode' v_m_wo_w = 'Verified Sample Share' tp = 'Total Probability of Each Mode'  tf = 'Total Frequency of Each Mode';
 	format alt alts.;
 	title 'Verified Sample Share = Total Probability of Each Mode / Total Frequency of Each Mode';
@@ -176,7 +176,7 @@ run;
 
 /*Question 1_d*/
 /*Logit(C) with weight variable using 'phreg'*/
-proc phreg data = a_2 nosummary outest = betas_1;
+proc phreg data = a_2 nosummary outest = betas_0_mk;
 strata case;
 model failure*chosen (0) = unosr unotr ;
 weight weight;
@@ -185,7 +185,7 @@ run;
 
 /*The following stpes calculate the probabilities of each alternatives within each case*/
 /*1. using the betas_0 and the corresponding vars(unosr and unotr) to calculate the utilities*/
-proc score data = a_2 score = betas_1 type = parms out = p_1;
+proc score data = a_2 score = betas_0_mk type = parms out = p_1;
 	var unosr unotr;
 run;
 
@@ -230,7 +230,7 @@ format v_m_wo_w percent10.2;
 run;
 
 /*6. Create a table to show the verification*/
-proc print data = v_m_wo_w_1 label;
+proc print data = v_m_wo_w_1 label noobs;
 	label alt = 'Mode' v_m_wo_w = 'Verified Sample Share' tp = 'Total Probability of Each Mode'  tf = 'Total Frequency of Each Mode';
 	format alt alts.;
 	title 'Verified Sample Share with Weight = Total Probability of Each Mode / Total Frequency of Each Mode';
@@ -240,3 +240,57 @@ title;
 
 /*--------------------------------------------------------------------------------------------------------------------------------------*/
 
+/**/
+proc phreg data = a_2 nosummary outest = betas_2_a;
+strata case;
+model failure*chosen (0) = unosr unotr ivtt ovttdist totcost;
+weight weight;
+title 'Logit Model with Weight (IVTT, OVTTDIST and TOTCOST)';
+run;
+
+/**/
+proc sql;
+create table Q_2_a as select ivtt/totcost*60 as v_of_ivtt from betas_2_a;
+quit;
+
+proc print data = q_2_a label noobs;
+	label v_of_ivtt = 'Value of In-Vehicle Travel Time ($/hr)';
+	title 'Value of In-Vehicle Travel Time ($/hr)';
+run;
+
+/**/
+proc sgplot data = a_2;
+	scatter x = dist y = ovtt / group = alt;
+	format alt alts.;
+	title 'OVTT-Distance Plot';
+run;
+
+/*--------------------------------------------------------------------------------------------------------------------------------------*/
+
+/**/
+proc phreg data = a_2 nosummary outest = betas_2_b;
+strata case;
+model failure*chosen (0) = unosr unotr ivtt ovttdist totcost vehwrksr vehwrktr;
+weight weight;
+title 'Constant-Only Logit Model with Weight (IVTT, OVTTDIST, TOTCOST, VEHWRKSR and VEHWRKTR)';
+run;
+
+/*--------------------------------------------------------------------------------------------------------------------------------------*/
+
+/**/
+proc phreg data = a_2 nosummary outest = betas_2_c;
+strata case;
+model failure*chosen (0) = unosr unotr ivtt ovttdist totcost vehwrkda;
+weight weight;
+title 'Constant-Only Logit Model with Weight (IVTT, OVTTDIST, TOTCOST and VEHWRKDA)';
+run;
+
+/*--------------------------------------------------------------------------------------------------------------------------------------*/
+
+/**/
+proc phreg data = a_2 nosummary outest = betas_2_d;
+strata case;
+model failure*chosen (0) = unosr unotr ivtt ovttdist totcost vehwrkda popsr poptr;
+weight weight;
+title 'Constant-Only Logit Model with Weight (IVTT, OVTTDIST, TOTCOST, VEHWRKDA, POPSR and POPTR)';
+run;

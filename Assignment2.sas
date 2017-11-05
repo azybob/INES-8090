@@ -90,7 +90,7 @@ failure = 1-chosen;
 run;
 
 /*Logit(C) without weight variable using 'phreg'*/
-proc phreg data = a_2 nosummary outest = betas_0_ss;
+proc phreg data = a_2 nosummary outest = betas_1_c;
 strata case;
 model failure*chosen (0) = unosr unotr ;
 title 'Constant-Only Logit Model without Weight';
@@ -98,51 +98,51 @@ run;
 
 /*The following stpes calculate the probabilities of each alternatives within each case*/
 /*1. using the betas_0 and the corresponding vars(unosr and unotr) to calculate the utilities*/
-proc score data = a_2 score = betas_0_ss type = parms out = p;
+proc score data = a_2 score = betas_1_c type = parms out = p_1_c;
 	var unosr unotr;
 run;
 
 /*2. exponentiate each utility*/
-data p (rename = (failure2 = ut));
-set p;
+data p_1_c (rename = (failure2 = ut));
+set p_1_c;
 run;
-data p;
-set p;
+data p_1_c;
+set p_1_c;
 label ut = 'utility';
 p = exp(ut);
 run;
 
 /*3. sum up the total utility for each case*/
-proc means data = p noprint;
-	output out = s sum(p) = sp;
+proc means data = p_1_c noprint;
+	output out = s_1_c sum(p) = sp;
 	by case;
 run;
 
 /*4. merge two data set and calculate the probability of each alternative within each case*/
-data p;
-	merge p s(keep = case sp);
+data p_1_c;
+	merge p_1_c s_1_c(keep = case sp);
 	by case;
 	p = p / sp;
 run;
 
 /*5. Create a table to show the average choice probability of each mode*/
 proc sql;
-create table v_m_wo_w as select alt, sum(p*chosen) as tp, sum(chosen) as tf from p group by alt;
+create table v_m_wo_w_1_c as select alt, sum(p*chosen) as tp, sum(chosen) as tf from p_1_c group by alt;
 quit;
 
-data v_m_wo_w;
-set v_m_wo_w;
+data v_m_wo_w_1_c;
+set v_m_wo_w_1_c;
 format alt alts.;
 v_m_wo_w = tp/tf;
 run;
 
-data v_m_wo_w;
-set v_m_wo_w /*(drop = ss tt)*/;
+data v_m_wo_w_1_c;
+set v_m_wo_w_1_c /*(drop = ss tt)*/;
 format v_m_wo_w percent10.2;
 run;
 
 /*6. Create a table to show the verification*/
-proc print data = v_m_wo_w label noobs;
+proc print data = v_m_wo_w_1_c label noobs;
 	label alt = 'Mode' v_m_wo_w = 'Verified Sample Share' tp = 'Total Probability of Each Mode'  tf = 'Total Frequency of Each Mode';
 	format alt alts.;
 	title 'Verified Sample Share = Total Probability of Each Mode / Total Frequency of Each Mode';
@@ -151,7 +151,7 @@ run;
 /*-------------------------------------------------------------Question 1 d-------------------------------------------------------------*/
 
 /*Logit(C) with weight variable using 'phreg'*/
-proc phreg data = a_2 nosummary outest = betas_0_mk;
+proc phreg data = a_2 nosummary outest = betas_1_d;
 strata case;
 model failure*chosen (0) = unosr unotr ;
 weight weight;
@@ -160,52 +160,52 @@ run;
 
 /*The following stpes calculate the probabilities of each alternatives within each case*/
 /*1. using the betas_0 and the corresponding vars(unosr and unotr) to calculate the utilities*/
-proc score data = a_2 score = betas_0_mk type = parms out = p_1;
+proc score data = a_2 score = betas_1_d type = parms out = p_1_d;
 	var unosr unotr;
 run;
 
 /*2. exponentiate each utility*/
-data p_1 (rename = (failure2 = ut));
-set p_1;
+data p_1_d (rename = (failure2 = ut));
+set p_1_d;
 run;
 
-data p_1;
-set p_1;
+data p_1_d;
+set p_1_d;
 label ut = 'utility';
 p = exp(ut);
 run;
 
 /*3. sum up the total utility for each case*/
-proc means data = p_1 noprint;
-	output out = s_1 sum(p) = sp;
+proc means data = p_1_d noprint;
+	output out = s_1_d sum(p) = sp;
 	by case;
 run;
 
 /*4. merge two data set and calculate the probability of each alternative within each case*/
-data p_1;
-	merge p_1 s_1(keep = case sp);
+data p_1_d;
+	merge p_1_d s_1_d(keep = case sp);
 	by case;
 	p = p / sp;
 run;
 
 /*5. Create a table to show the average choice probability of each mode*/
 proc sql;
-create table v_m_wo_w_1 as select alt, sum(p*chosen) as tp, sum(chosen) as tf from p_1 group by alt;
+create table v_m_wo_w_1_d as select alt, sum(p*chosen) as tp, sum(chosen) as tf from p_1_d group by alt;
 quit;
 
-data v_m_wo_w_1;
-set v_m_wo_w_1;
+data v_m_wo_w_1_d;
+set v_m_wo_w_1_d;
 format alt alts.;
 v_m_wo_w = tp/tf;
 run;
 
-data v_m_wo_w_1;
-set v_m_wo_w_1 /*(drop = ss tt)*/;
+data v_m_wo_w_1_d;
+set v_m_wo_w_1_d /*(drop = ss tt)*/;
 format v_m_wo_w percent10.2;
 run;
 
 /*6. Create a table to show the verification*/
-proc print data = v_m_wo_w_1 label noobs;
+proc print data = v_m_wo_w_1_d label noobs;
 	label alt = 'Mode' v_m_wo_w = 'Verified Sample Share' tp = 'Total Probability of Each Mode'  tf = 'Total Frequency of Each Mode';
 	format alt alts.;
 	title 'Verified Sample Share with Weight = Total Probability of Each Mode / Total Frequency of Each Mode';
@@ -220,6 +220,7 @@ title;
 /*-------------------------------------------------------------Question 2 a-------------------------------------------------------------*/
 
 /*Logit(C) with weight variable using 'phreg' (IVTT, OVTTDIST and TOTCOST)*/
+
 /*ods graphics off;
 ods exclude all;*/  
 proc phreg data = a_2 nosummary outest = betas_2_a;
@@ -265,6 +266,7 @@ run;
 
 /*Logit(C) with weight variable using 'phreg' (IVTT, OVTTDIST, TOTCOST, VEHWRKSR and VEHWRKTR)*/
 /*Record and calculate the t statistic ('Significance Test for Each Coefficient') of each coefficient via 'ODS' and 'DATA'*/
+
 /*ods graphics off;
 ods exclude all;*/  
 ods output ParameterEstimates = sd_2_b;
@@ -272,7 +274,7 @@ proc phreg data = a_2 nosummary outest = betas_2_b;
 strata case;
 model failure*chosen (0) = unosr unotr ivtt ovttdist totcost vehwrksr vehwrktr;
 weight weight;
-title 'Constant-Only Logit Model with Weight (IVTT, OVTTDIST, TOTCOST, VEHWRKSR and VEHWRKTR)';
+title 'Logit Model with Weight (IVTT, OVTTDIST, TOTCOST, VEHWRKSR and VEHWRKTR)';
 run;
 ods output close;
 /*ods exclude none;*/
@@ -293,6 +295,7 @@ title;
 
 /*Logit(C) with weight variable using 'phreg' (IVTT, OVTTDIST, TOTCOST and VEHWRKDA)*/
 /*Record and calculate the t statistic ('Significance Test for Each Coefficient') of each coefficient via 'ODS' and 'DATA'*/
+
 /*ods graphics off;
 ods exclude all;*/  
 ods output ParameterEstimates = sd_2_c;
@@ -300,7 +303,7 @@ proc phreg data = a_2 nosummary outest = betas_2_c;
 strata case;
 model failure*chosen (0) = unosr unotr ivtt ovttdist totcost vehwrkda;
 weight weight;
-title 'Constant-Only Logit Model with Weight (IVTT, OVTTDIST, TOTCOST and VEHWRKDA)';
+title 'Logit Model with Weight (IVTT, OVTTDIST, TOTCOST and VEHWRKDA)';
 run;
 ods output close;
 /*ods exclude none;*/
@@ -321,6 +324,7 @@ title;
 
 /*Logit(C) with weight variable using 'phreg' (IVTT, OVTTDIST, TOTCOST, VEHWRKDA, POPSR and POPTR)*/
 /*Record and calculate the t statistic ('Significance Test for Each Coefficient') of each coefficient via 'ODS' and 'DATA'*/
+
 /*ods graphics off;
 ods exclude all;*/  
 ods output ParameterEstimates = sd_2_d;
@@ -328,7 +332,7 @@ proc phreg data = a_2 nosummary outest = betas_2_d;
 strata case;
 model failure*chosen (0) = unosr unotr ivtt ovttdist totcost vehwrkda popsr poptr;
 weight weight;
-title 'Constant-Only Logit Model with Weight (IVTT, OVTTDIST, TOTCOST, VEHWRKDA, POPSR and POPTR)';
+title 'Logit Model with Weight (IVTT, OVTTDIST, TOTCOST, VEHWRKDA, POPSR and POPTR)';
 run;
 ods output close;
 /*ods exclude none;*/
@@ -347,8 +351,9 @@ title;
 
 /*-------------------------------------------------------------Question 2 e-------------------------------------------------------------*/
 
-/*Logit(C) with weight variable using 'phreg' (IVTT, OVTTDIST, TOTCOST, VEHWRKDA, POPSR and POPTR)*/
+/*Logit(C) with weight variable using 'phreg' (IVTT, OVTTDIST, TOTCOST, VEHWRKDA, POPTR, MALESR, MALETR, AGESR and AGETR)*/
 /*Record and calculate the t statistic ('Significance Test for Each Coefficient') of each coefficient via 'ODS' and 'DATA'*/
+
 /*ods graphics off;
 ods exclude all;*/  
 ods output ParameterEstimates = sd_2_e;
@@ -356,7 +361,7 @@ proc phreg data = a_2 nosummary outest = betas_2_e;
 strata case;
 model failure*chosen (0) = unosr unotr ivtt ovttdist totcost vehwrkda poptr MALESR MALETR AGESR AGETR;
 weight weight;
-title 'Constant-Only Logit Model with Weight (IVTT, OVTTDIST, TOTCOST, VEHWRKDA, POPTR, MALESR, MALETR, AGESR and AGETR)';
+title 'Logit Model with Weight (IVTT, OVTTDIST, TOTCOST, VEHWRKDA, POPTR, MALESR, MALETR, AGESR and AGETR)';
 run;
 ods output close;
 /*ods exclude none;*/
@@ -369,6 +374,129 @@ run;
 proc print data = sd_2_e label noobs;
 	label parameter = 'Variable' estimate = 'Coefficient (Beta)' t_value = 't stat';
 	title 'Significance of Each Coefficient';
+run;
+
+title;
+
+/*-------------------------------------------------------------Question 2 f-------------------------------------------------------------*/
+
+/*Logit(C) with weight variable using 'phreg' (IVTT, OVTTDIST, TOTCOST, VEHWRKDA, POPTR and HIGHINC)*/
+/*Record and calculate the t statistic ('Significance Test for Each Coefficient') of each coefficient via 'ODS' and 'DATA'*/
+/*ods graphics off;
+ods exclude all;*/
+ods output ParameterEstimates = sd_2_f;
+proc phreg data = a_2 nosummary outest = betas_2_f;
+strata case;
+model failure*chosen (0) = unosr unotr ivtt ovttdist totcost totcost*HIGHINC vehwrkda poptr;
+weight weight;
+title 'Logit Model with Weight (IVTT, OVTTDIST, TOTCOST, VEHWRKDA, POPTR and HIGHINC)';
+run;
+ods output close;
+/*ods exclude none;*/
+
+data sd_2_f;
+set sd_2_f (keep = parameter estimate stderr);
+t_value = estimate / stderr;
+run;
+
+proc print data = sd_2_f label noobs;
+	label parameter = 'Variable' estimate = 'Coefficient (Beta)' t_value = 't stat';
+	title 'Significance of Each Coefficient';
+run;
+
+
+/*Calculate the 'Value of In-Vehicle Travel Time ($/hr)' for each income group and print it*/
+proc sql;
+create table Q_2_f as select ivtt/totcost*60 as v_of_ivtt_lowInc, ivtt/(totcost+totcostHIGHINC)*60 as v_of_ivtt_highInc from betas_2_f;
+quit;
+
+proc print data = q_2_f label noobs;
+	label v_of_ivtt_lowInc = 'Value of In-Vehicle Travel Time of Low-income Group($/hr)' v_of_ivtt_highInc = 'Value of In-Vehicle Travel Time of High-income Group($/hr)';
+	title 'Value of In-Vehicle Travel Time ($/hr)';
+run;
+
+title;
+
+/*--------------------------------------------------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------Question 3--------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------Question 3 a-------------------------------------------------------------*/
+
+/*Using model with vars. IVTT, OVTT and TOTCOST (Constants UNOSR and UNOTR)*/
+
+ods output ParameterEstimates = sd_3_a;
+proc phreg data = a_2 nosummary outest = betas_3_a;
+strata case;
+model failure*chosen (0) = unosr unotr ivtt ovtt totcost;
+weight weight;
+title 'Logit Model with Weight (IVTT, OVTT and TOTCOST)';
+run;
+ods output close;
+
+data sd_3_a;
+set sd_3_a (keep = parameter estimate stderr);
+t_value = estimate / stderr;
+run;
+
+proc print data = sd_3_a label noobs;
+	label parameter = 'Variable' estimate = 'Coefficient (Beta)' t_value = 't stat';
+	title 'Significance of Each Coefficient';
+run;
+
+/*The following stpes calculate the probabilities of each alternatives within each case*/
+/*1. using the betas_0 and the corresponding vars(unosr and unotr) to calculate the utilities*/
+proc score data = a_2 score = betas_3_a type = parms out = p_3_b;
+	var unosr unotr;
+run;
+
+/*2. exponentiate each utility*/
+data p_3_b (rename = (failure2 = ut));
+set p_3_b;
+run;
+
+data p_3_b;
+set p_3_b;
+label ut = 'utility';
+p = exp(ut);
+run;
+
+/*3. sum up the total utility for each case*/
+proc means data = p_3_b noprint;
+	output out = s_3_b sum(p) = sp;
+	by case;
+run;
+
+/*4. merge two data set and calculate the probability of each alternative within each case*/
+data p_3_b;
+	merge p_3_b s_3_b(keep = case sp);
+	by case;
+	p = p / sp;
+run;
+
+/*5. Create a table to show the average choice probability of each mode*/
+proc sql;
+create table av_pr_3_b as select alt, sum(p*chosen) as tp, sum(chosen) as tf from p_3_b group by alt;
+quit;
+
+data av_pr_3_b;
+set av_pr_3_b;
+format alt alts.;
+av_pr = tp/tf;
+run;
+
+data av_pr_3_b;
+set av_pr_3_b /*(drop = ss tt)*/;
+format av_pr percent10.2;
+run;
+
+/*6. Create a table to show the verification*/
+data a_c_3_b;
+set av_pr_3_b (drop = tp tf);
+proc print data = a_c_3_b label noobs;
+	label alt = 'Mode' av_pr = 'Choice Probability of Each Mode Under Average LOS Conditions';
+	format alt alts.;
+	title 'Choice Probability of Each Mode Under Average LOS Conditions';
 run;
 
 title;

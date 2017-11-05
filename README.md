@@ -2,4 +2,4 @@
 
 ## Assignment2
 
-> ### Self-elasticity: (E=mc^2)，$$x_{1,2} = \frac{-b \pm \sqrt{b^2-4ac}}{2b}.$$
+> ### Self-elasticity: $$\eta_{X_{i,k}}^{P_{i}}\beta_{k}X_{i,k} = \beta_{k}X_{i,k}(1-P_{i}).$$

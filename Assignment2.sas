@@ -3,13 +3,13 @@
 /*--------------------------------------------------------------------------------------------------------------------------------------*/
 
 /*Import file under Mosaic Computer environment*/
-/*proc import out = work.a_2 datafile = 'W:\Documents\HW Assignments\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;*/
+proc import out = work.a_2 datafile = 'W:\Documents\HW Assignments\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;
 /*Import file under SAS Studio Environment*/
 /*proc import datafile = '/home/yl700/Data/Assignment2.xlsx' dbms = xlsx out = work.a_2;*/
 /*Import file under Citrix Remote Access environment*/
 /*proc import out = work.a_2 datafile = '\\client\D$\Google Drive\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;*/
 /*Import file under My Own Computer environment*/
-proc import out = work.a_2 datafile = 'D:\Google Drive\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;
+/*proc import out = work.a_2 datafile = 'D:\Google Drive\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;*/
 run;
 
 /*Create formats of the variables, in order to show the analysis results more readibly*/
@@ -38,7 +38,7 @@ proc sql;
 	select alt,
 			sum(chosen) as Frequency
 		from a_2
-		group by alt
+		group by alt;
 		order by alt;
 
 /*Create table of sample mode share*/

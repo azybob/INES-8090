@@ -447,7 +447,7 @@ run;
 /*The following stpes calculate the probabilities of each alternatives within each case*/
 /*1. using the betas_0 and the corresponding vars(unosr and unotr) to calculate the utilities*/
 proc score data = a_2 score = betas_3_a type = parms out = p_3_b;
-	var unosr unotr;
+	var unosr unotr ivtt ovtt totcost;
 run;
 
 /*2. exponentiate each utility*/
@@ -476,13 +476,13 @@ run;
 
 /*5. Create a table to show the average choice probability of each mode*/
 proc sql;
-create table av_pr_3_b as select alt, sum(p*chosen) as tp, sum(chosen) as tf from p_3_b group by alt;
+create table av_pr_3_b as select alt, sum(p) as tp, sum(chosen) as tf from p_3_b group by alt;
 quit;
 
 data av_pr_3_b;
 set av_pr_3_b;
 format alt alts.;
-av_pr = tp/tf;
+av_pr = tp/1125;
 run;
 
 data av_pr_3_b;

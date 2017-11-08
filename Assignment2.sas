@@ -3,13 +3,13 @@
 /*--------------------------------------------------------------------------------------------------------------------------------------*/
 
 /*Import file under Mosaic Computer environment*/
-proc import out = work.a_2 datafile = 'W:\Documents\HW Assignments\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;
+/*proc import out = work.a_2 datafile = 'W:\Documents\HW Assignments\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;*/
 /*Import file under SAS Studio Environment*/
 /*proc import datafile = '/home/yl700/Data/Assignment2.xlsx' dbms = xlsx out = work.a_2;*/
 /*Import file under Citrix Remote Access environment*/
 /*proc import out = work.a_2 datafile = '\\client\D$\Google Drive\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;*/
 /*Import file under My Own Computer environment*/
-/*proc import out = work.a_2 datafile = 'D:\Google Drive\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;*/
+proc import out = work.a_2 datafile = 'D:\Google Drive\INES 8090\Assignment\Assignment2.xlsx' dbms = xlsx;
 run;
 
 /*Create formats of the variables, in order to show the analysis results more readibly*/
@@ -127,13 +127,13 @@ run;
 
 /*5. Create a table to show the average choice probability of each mode*/
 proc sql;
-create table v_m_wo_w_1_c as select alt, sum(p*chosen) as tp, sum(chosen) as tf from p_1_c group by alt;
+create table v_m_wo_w_1_c as select alt, sum(p) as tp from p_1_c group by alt;
 quit;
 
 data v_m_wo_w_1_c;
 set v_m_wo_w_1_c;
 format alt alts.;
-v_m_wo_w = tp/tf;
+v_m_wo_w = tp/1125;
 run;
 
 data v_m_wo_w_1_c;
@@ -143,9 +143,9 @@ run;
 
 /*6. Create a table to show the verification*/
 proc print data = v_m_wo_w_1_c label noobs;
-	label alt = 'Mode' v_m_wo_w = 'Verified Sample Share' tp = 'Total Probability of Each Mode'  tf = 'Total Frequency of Each Mode';
+	label alt = 'Mode' v_m_wo_w = 'Verified Sample Share' tp = 'Total Probability of Each Mode';
 	format alt alts.;
-	title 'Verified Sample Share = Total Probability of Each Mode / Total Frequency of Each Mode';
+	title 'Verified Sample Share (Average Probability) = Total Probability of Each Mode / Case Number (1125)';
 run;
 
 /*-------------------------------------------------------------Question 1 d-------------------------------------------------------------*/
@@ -190,13 +190,13 @@ run;
 
 /*5. Create a table to show the average choice probability of each mode*/
 proc sql;
-create table v_m_wo_w_1_d as select alt, sum(p*chosen) as tp, sum(chosen) as tf from p_1_d group by alt;
+create table v_m_wo_w_1_d as select alt, sum(p) as tp from p_1_d group by alt;
 quit;
 
 data v_m_wo_w_1_d;
 set v_m_wo_w_1_d;
 format alt alts.;
-v_m_wo_w = tp/tf;
+v_m_wo_w = tp/1125;
 run;
 
 data v_m_wo_w_1_d;
@@ -206,12 +206,33 @@ run;
 
 /*6. Create a table to show the verification*/
 proc print data = v_m_wo_w_1_d label noobs;
-	label alt = 'Mode' v_m_wo_w = 'Verified Sample Share' tp = 'Total Probability of Each Mode'  tf = 'Total Frequency of Each Mode';
+	label alt = 'Mode' v_m_wo_w = 'Verified Sample Share' tp = 'Total Probability of Each Mode';
 	format alt alts.;
-	title 'Verified Sample Share with Weight = Total Probability of Each Mode / Total Frequency of Each Mode';
+	title 'Verified Sample Share with Weight (Average Probability) = Total Probability of Each Mode / Case Number (1125)';
 run;
 
 title;
+
+/*-------------------------------------------------------------Question 1 e-------------------------------------------------------------*/
+data q_1_e;
+set wm_s2;
+if alt = 1 then b_wo_w = 0;
+else if alt = 2 then b_wo_w = -0.862323811;
+else b_wo_w = -0.023733747;
+bias = log(ss/mks);
+ad_bias = bias - -0.607709482; 
+if alt = 1 then ad_bias = 0;
+drop weight;
+b_w_w = b_wo_w - ad_bias;
+drop frequency;
+run;
+
+proc print data = q_1_e label noobs;
+	label alt = 'Mode' ss = 'Sample Share' mks = 'Market Share' b_wo_w = 'Beta W/O Weight' bias = 'Bias (Sample Share / Market Share)' 
+		ad_bias = "Adjusted Bias (Set Base DA's Beta Equal to 0)" b_w_w = 'Beta with Weight';
+	format alt alts.;
+	title 'Question 1 e)';
+run;
 
 /*--------------------------------------------------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------Question 2--------------------------------------------------------------*/
@@ -446,11 +467,74 @@ run;
 
 /*The following stpes calculate the probabilities of each alternatives within each case*/
 /*1. using the betas_0 and the corresponding vars(unosr and unotr) to calculate the utilities*/
+proc sql;
+create table q_3_a as select alt as alt, mean(ivtt) as ivtt, mean(ovtt) as ovtt, mean(totcost) as totcost from a_2 group by alt;
+quit;
+
+data q_3_a;
+set q_3_a;
+if alt = 1 then unosr = 0;
+else if alt = 2 then unosr = 1;
+else unosr = 0;
+run;
+
+data q_3_a;
+set q_3_a;
+if alt = 1 then unotr = 0;
+else if alt = 2 then unotr = 0;
+else unotr = 1;
+run;
+
+proc score data = q_3_a score = betas_3_a type = parms out = p_3_b;
+	var unosr unotr ivtt ovtt totcost;
+run;
+
+data p_3_b (rename = (failure = ut));
+set p_3_b;
+run;
+
+/*2. exponentiate each utility*/
+data p_3_b;
+set p_3_b;
+label ut = 'utility';
+p = exp(ut);
+run;
+
+/*3. sum up the total utility for each case*/
+proc means data = p_3_b noprint;
+	output out = s_3_b sum(p) = sp;
+run;
+
+/*4. merge two data set and calculate the probability of each alternative*/
+data p_3_b;
+	merge p_3_b s_3_b(keep = sp);
+run;
+
+data p_3_b;
+set p_3_b;
+if sp ^=. then k = sp;
+	retain k;
+sp = k;
+p = p / sp;
+drop k sp;
+run;
+
+/*5. Create a table to show the average choice probability of each mode and print it*/
+proc print data = p_3_B label noobs;
+	label alt = 'Mode' p = 'Choice Probability of Each Mode Under Average LOS Conditions';
+	format alt alts. p percent10.2;
+	title 'Choice Probability of Each Mode Under Average LOS Conditions';
+run;
+
+title;
+
+/*The following stpes calculate the probabilities of each alternatives within each case
+/*1. using the betas_0 and the corresponding vars(unosr and unotr) to calculate the utilities
 proc score data = a_2 score = betas_3_a type = parms out = p_3_b;
 	var unosr unotr ivtt ovtt totcost;
 run;
 
-/*2. exponentiate each utility*/
+/*2. exponentiate each utility
 data p_3_b (rename = (failure2 = ut));
 set p_3_b;
 run;
@@ -461,20 +545,20 @@ label ut = 'utility';
 p = exp(ut);
 run;
 
-/*3. sum up the total utility for each case*/
+/*3. sum up the total utility for each case
 proc means data = p_3_b noprint;
 	output out = s_3_b sum(p) = sp;
 	by case;
 run;
 
-/*4. merge two data set and calculate the probability of each alternative within each case*/
+/*4. merge two data set and calculate the probability of each alternative within each case
 data p_3_b;
 	merge p_3_b s_3_b(keep = case sp);
 	by case;
 	p = p / sp;
 run;
 
-/*5. Create a table to show the average choice probability of each mode*/
+/*5. Create a table to show the average choice probability of each mode
 proc sql;
 create table av_pr_3_b as select alt, sum(p) as tp, sum(chosen) as tf from p_3_b group by alt;
 quit;
@@ -486,11 +570,11 @@ av_pr = tp/1125;
 run;
 
 data av_pr_3_b;
-set av_pr_3_b /*(drop = ss tt)*/;
+set av_pr_3_b /*(drop = ss tt);
 format av_pr percent10.2;
 run;
 
-/*6. Create a table to show the verification*/
+/*6. Create a table to show the verification
 data a_c_3_b;
 set av_pr_3_b (drop = tp tf);
 proc print data = a_c_3_b label noobs;
@@ -500,3 +584,4 @@ proc print data = a_c_3_b label noobs;
 run;
 
 title;
+*/

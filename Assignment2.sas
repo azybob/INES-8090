@@ -17,16 +17,6 @@ proc format;
 	value alts 1 = 'Drive-alone' 2 = 'Shared Ride' 3 = 'Transit';
 run;
 
-/*proc sql;
-	create table Mode_Share as select alt label = 'Mode' format = alts., sum(chosen) as Sum
-	from a_2
-	group by alt
-	order by alt;
-	alter table Mode_share
-		add m_s num label = 'Mode Share';
-	select alt, Sum, m_s from Mode_Share;
-*/
-
 /*--------------------------------------------------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------Question 1--------------------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------------------------*/
@@ -277,13 +267,18 @@ proc print data = q_2_a label noobs;
 run;
 
 /*Plot the 'OVTT-Distance Plot'*/
-proc sgplot data = a_2;
-	scatter x = dist y = ovtt / group = alt;
-	format alt alts.;
-	title 'OVTT-Distance Plot';
+goptions reset = all;
+symbol1 v=star c=red h=1;
+symbol2 v=triangle c=blue h=1;
+symbol3 v=plus c = green h=1;
+proc gplot data = a_2;
+  plot ovtt*dist=alt;
+  format alt alts.;
+title 'OVTT-Distance Plot';
 run;
+quit;
 
-/*-------------------------------------------------------------Question 2 b-------------------------------------------------------------*/
+/*--------------------------------------------------------Question 2 b-------------------------------------------------------------*/
 
 /*Logit(C) with weight variable using 'phreg' (IVTT, OVTTDIST, TOTCOST, VEHWRKSR and VEHWRKTR)*/
 /*Record and calculate the t statistic ('Significance Test for Each Coefficient') of each coefficient via 'ODS' and 'DATA'*/
@@ -527,61 +522,3 @@ proc print data = p_3_B label noobs;
 run;
 
 title;
-
-/*The following stpes calculate the probabilities of each alternatives within each case
-/*1. using the betas_0 and the corresponding vars(unosr and unotr) to calculate the utilities
-proc score data = a_2 score = betas_3_a type = parms out = p_3_b;
-	var unosr unotr ivtt ovtt totcost;
-run;
-
-/*2. exponentiate each utility
-data p_3_b (rename = (failure2 = ut));
-set p_3_b;
-run;
-
-data p_3_b;
-set p_3_b;
-label ut = 'utility';
-p = exp(ut);
-run;
-
-/*3. sum up the total utility for each case
-proc means data = p_3_b noprint;
-	output out = s_3_b sum(p) = sp;
-	by case;
-run;
-
-/*4. merge two data set and calculate the probability of each alternative within each case
-data p_3_b;
-	merge p_3_b s_3_b(keep = case sp);
-	by case;
-	p = p / sp;
-run;
-
-/*5. Create a table to show the average choice probability of each mode
-proc sql;
-create table av_pr_3_b as select alt, sum(p) as tp, sum(chosen) as tf from p_3_b group by alt;
-quit;
-
-data av_pr_3_b;
-set av_pr_3_b;
-format alt alts.;
-av_pr = tp/1125;
-run;
-
-data av_pr_3_b;
-set av_pr_3_b /*(drop = ss tt);
-format av_pr percent10.2;
-run;
-
-/*6. Create a table to show the verification
-data a_c_3_b;
-set av_pr_3_b (drop = tp tf);
-proc print data = a_c_3_b label noobs;
-	label alt = 'Mode' av_pr = 'Choice Probability of Each Mode Under Average LOS Conditions';
-	format alt alts.;
-	title 'Choice Probability of Each Mode Under Average LOS Conditions';
-run;
-
-title;
-*/
